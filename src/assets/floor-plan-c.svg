@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 550 500" width="550" height="500">
+  <defs>
+    <pattern id="grid-c" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#f0f0f0" stroke-width="0.5"/>
+    </pattern>
+  </defs>
+  <rect width="550" height="500" fill="#fafafa"/>
+  <rect width="550" height="500" fill="url(#grid-c)"/>
+  
+  <!-- Title -->
+  <text x="275" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#2d3748">C户型 · 一室一厅</text>
+  <text x="275" y="60" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#718096">建筑面积：55㎡ | 1室1厅1卫 | 南向</text>
+  
+  <!-- Outer walls -->
+  <rect x="75" y="80" width="400" height="340" fill="none" stroke="#2d3748" stroke-width="4"/>
+  
+  <!-- 客餐厅 (Living/Dining Room) - center-left -->
+  <rect x="75" y="80" width="250" height="200" fill="#e6f3ff" stroke="#2d3748" stroke-width="2"/>
+  <text x="200" y="170" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#2d3748">客餐厅</text>
+  <text x="200" y="190" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#718096">5.0m × 5.0m</text>
+  <!-- Small sofa -->
+  <rect x="120" y="100" width="45" height="22" rx="5" fill="#e2e8f0" stroke="#aaa" stroke-width="1"/>
+  <!-- Dining table -->
+  <circle cx="230" cy="200" r="18" fill="none" stroke="#aaa" stroke-width="1.5"/>
+  <circle cx="220" cy="190" r="6" fill="#e2e8f0" stroke="#aaa" stroke-width="1"/>
+  <circle cx="240" cy="190" r="6" fill="#e2e8f0" stroke="#aaa" stroke-width="1"/>
+  <circle cx="220" cy="210" r="6" fill="#e2e8f0" stroke="#aaa" stroke-width="1"/>
+  <circle cx="240" cy="210" r="6" fill="#e2e8f0" stroke="#aaa" stroke-width="1"/>
+  
+  <!-- 卧室 (Bedroom) - top right -->
+  <rect x="325" y="80" width="150" height="140" fill="#fff3e6" stroke="#2d3748" stroke-width="2"/>
+  <text x="400" y="145" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#2d3748">卧室</text>
+  <text x="400" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#718096">3.0m × 4.0m</text>
+  <!-- Bed -->
+  <rect x="370" y="95" width="48" height="35" rx="3" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+  <rect x="373" y="98" width="19" height="12" rx="2" fill="#e2e8f0" stroke="#aaa" stroke-width="1"/>
+  <rect x="394" y="98" width="19" height="12" rx="2" fill="#e2e8f0" stroke="#aaa" stroke-width="1"/>
+  <!-- Wardrobe -->
+  <rect x="335" y="95" width="30" height="50" rx="2" fill="#ddd" stroke="#aaa" stroke-width="1"/>
+  
+  <!-- 厨房 (Kitchen) - bottom left -->
+  <rect x="75" y="280" width="160" height="140" fill="#fff9e6" stroke="#2d3748" stroke-width="2"/>
+  <text x="155" y="350" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#2d3748">厨房</text>
+  <text x="155" y="370" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#718096">3.0m × 3.5m</text>
+  <!-- Counter -->
+  <rect x="85" y="290" width="80" height="12" rx="2" fill="#ddd" stroke="#aaa" stroke-width="1"/>
+  <rect x="85" y="315" width="12" height="60" rx="2" fill="#ddd" stroke="#aaa" stroke-width="1"/>
+  
+  <!-- 卫生间 (Bathroom) - bottom right -->
+  <rect x="235" y="280" width="240" height="140" fill="#e6ffff" stroke="#2d3748" stroke-width="2"/>
+  <text x="355" y="350" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#2d3748">卫生间</text>
+  <text x="355" y="370" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#718096">5.0m × 3.5m</text>
+  <!-- Tub -->
+  <rect x="260" y="295" width="50" height="25" rx="12" fill="none" stroke="#4299e1" stroke-width="2"/>
+  <!-- Sink -->
+  <circle cx="355" cy="305" r="12" fill="none" stroke="#4299e1" stroke-width="2"/>
+  <!-- Toilet -->
+  <rect x="420" y="300" width="20" height="30" rx="10" fill="none" stroke="#4299e1" stroke-width="2"/>
+  
+  <!-- Doors -->
+  <line x1="325" y1="160" x2="325" y2="190" stroke="#fff" stroke-width="6"/>
+  <line x1="325" y1="190" x2="325" y2="220" stroke="#e53e3e" stroke-width="2"/>
+  
+  <line x1="220" y1="280" x2="220" y2="310" stroke="#fff" stroke-width="6"/>
+  
+  <!-- Entrance -->
+  <line x1="75" y1="350" x2="105" y2="350" stroke="#e53e3e" stroke-width="3"/>
+  <text x="55" y="355" font-family="Arial, sans-serif" font-size="10" fill="#e53e3e">入户</text>
+  
+  <!-- Windows -->
+  <rect x="75" y="130" width="6" height="60" fill="#90cdf4" stroke="#4299e1" stroke-width="1"/>
+  <rect x="325" y="80" width="50" height="6" fill="#90cdf4" stroke="#4299e1" stroke-width="1"/>
+  <rect x="235" y="380" width="200" height="6" fill="#90cdf4" stroke="#4299e1" stroke-width="1"/>
+  
+  <!-- Dimensions -->
+  <line x1="75" y1="460" x2="475" y2="460" stroke="#718096" stroke-width="1"/>
+  <text x="275" y="452" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#718096">8m</text>
+  
+  <line x1="450" y1="80" x2="450" y2="420" stroke="#718096" stroke-width="1"/>
+  <text x="470" y="250" font-family="Arial, sans-serif" font-size="12" fill="#718096" transform="rotate(90,470,250)">8m</text>
+  
+  <!-- Legend -->
+  <rect x="15" y="470" width="130" height="30" rx="5" fill="#fff" stroke="#cbd5e0" stroke-width="1"/>
+  <text x="25" y="490" font-family="Arial, sans-serif" font-size="10" fill="#718096">□ 客餐厅  □ 卧室  □ 厨房  □ 卫浴</text>
+</svg>

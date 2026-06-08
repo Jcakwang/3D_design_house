@@ -22,19 +22,12 @@
           @click="goToHouse(fp)"
         >
           <div class="card-visual">
-            <!-- 户型示意图 -->
-            <svg viewBox="0 0 200 150" class="floorplan-svg">
-              <rect x="10" y="10" width="180" height="130" fill="none" stroke="#cbd5e0" stroke-width="2" rx="4"/>
-              <!-- 房间分割线 -->
-              <line x1="100" y1="10" x2="100" y2="140" stroke="#cbd5e0" stroke-width="1.5"/>
-              <line x1="10" y1="80" x2="100" y2="80" stroke="#cbd5e0" stroke-width="1.5"/>
-              <line x1="100" y1="60" x2="190" y2="60" stroke="#cbd5e0" stroke-width="1.5"/>
-              <!-- 房间名称 -->
-              <text x="55" y="55" text-anchor="middle" fill="#718096" font-size="11">客厅</text>
-              <text x="55" y="115" text-anchor="middle" fill="#718096" font-size="11">卧室</text>
-              <text x="145" y="40" text-anchor="middle" fill="#718096" font-size="11">主卧</text>
-              <text x="145" y="110" text-anchor="middle" fill="#718096" font-size="11">厨房</text>
-            </svg>
+            <!-- 真实户型 SVG 图 -->
+            <img 
+              :src="getFloorPlanImage(fp.id)" 
+              :alt="fp.name"
+              class="floorplan-img"
+            />
           </div>
           <div class="card-info">
             <h4>{{ fp.name }}</h4>
@@ -76,6 +69,15 @@ const floorPlans = computed(() =>
     ? allFloorPlans.filter(fp => community.value.floorPlanIds.includes(fp.id))
     : []
 )
+
+function getFloorPlanImage(fpId) {
+  const map = {
+    'fp1': new URL('../assets/floor-plan-a.svg', import.meta.url).href,
+    'fp2': new URL('../assets/floor-plan-b.svg', import.meta.url).href,
+    'fp3': new URL('../assets/floor-plan-c.svg', import.meta.url).href,
+  }
+  return map[fpId] || map['fp1']
+}
 
 function goToHouse(fp) {
   router.push({
@@ -173,9 +175,10 @@ function goToHouse(fp) {
   justify-content: center;
 }
 
-.floorplan-svg {
+.floorplan-img {
   width: 100%;
-  max-width: 200px;
+  max-width: 280px;
+  height: auto;
 }
 
 .card-info {

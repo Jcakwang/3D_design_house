@@ -4,36 +4,11 @@
       <h2>📍 选择小区</h2>
       <p class="map-subtitle">点击地图上的标记，查看小区和户型信息</p>
     </div>
-    
+
     <div class="map-container" ref="mapRef">
-      <!-- 模拟地图背景 -->
-      <div class="map-bg">
-        <div class="map-grid"></div>
-        <!-- 道路 -->
-        <div class="road road-h1"></div>
-        <div class="road road-h2"></div>
-        <div class="road road-v1"></div>
-        <div class="road road-v2"></div>
-        <div class="road road-v3"></div>
-        
-        <!-- 绿地 -->
-        <div class="green-zone green-1"></div>
-        <div class="green-zone green-2"></div>
-        
-        <!-- 小区标记点 -->
-        <div
-          v-for="comm in communities"
-          :key="comm.id"
-          class="map-marker"
-          :style="{ left: getMarkerPosition(comm).left, top: getMarkerPosition(comm).top }"
-          @click="selectCommunity(comm)"
-        >
-          <div class="marker-pin">🏘️</div>
-          <div class="marker-label">{{ comm.name }}</div>
-        </div>
-      </div>
+      <div id="amap-container"></div>
     </div>
-    
+
     <!-- 小区信息卡片 -->
     <div v-if="selectedCommunity" class="community-popup" @click.stop>
       <div class="popup-header">
@@ -56,35 +31,91 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { communities } from '../data/mock'
 
 const router = useRouter()
 const mapRef = ref(null)
 const selectedCommunity = ref(null)
+let mapInstance = null
+let markers = []
+let infoWindow = null
 
-function getMarkerPosition(comm) {
-  // 根据小区ID计算标记位置（百分比，在地图范围内）
-  const positions = {
-    c1: { left: '30%', top: '35%' },
-    c2: { left: '60%', top: '25%' },
-    c3: { left: '35%', top: '65%' },
-    c4: { left: '70%', top: '60%' }
-  }
-  return positions[comm.id] || { left: '50%', top: '50%' }
+const AMAP_KEY = '084c94186c480e019a34687c67db84ff'
+const AMAP_SECURITY_CODE = '084c94186c480e019a34687c67db84ff'
+
+function loadAMap() {
+  return new Promise((resolve, reject) => {
+    if (window.AMap) {
+      resolve()
+      return
+    }
+    // 设置安全密钥
+    window._AMapSecurityConfig = {
+      securityJsCode: AMAP_SECURITY_CODE
+    }
+    const script = document.createElement('script')
+    script.type = 'text/javascript'
+    script.src = `https://web.amap.com/maps?v=2.0&key=${AMAP_KEY}&plugin=AMap.Marker,AMap.InfoWindow`
+    script.onload = resolve
+    script.onerror = reject
+    document.head.appendChild(script)
+  })
+}
+
+function initMap() {
+  mapInstance = new AMap.Map('amap-container', {
+    zoom: 12,
+    center: [116.4074, 39.9042],
+    mapStyle: 'amap://styles/light'
+  })
+
+  // 为每个小区创建标记
+  communities.forEach(comm => {
+    const marker = new AMap.Marker({
+      position: [comm.position.lng, comm.position.lat],
+      title: comm.name,
+      label: {
+        content: `<div class="amap-marker-label">${comm.name}</div>`,
+        offset: new AMap.Pixel(0, 30)
+      }
+    })
+
+    marker.on('click', () => {
+      selectCommunity(comm)
+    })
+
+    markers.push(marker)
+    mapInstance.add(marker)
+  })
 }
 
 function selectCommunity(comm) {
   selectedCommunity.value = comm
 }
 
-async function goToCommunity() {
+function goToCommunity() {
   if (selectedCommunity.value) {
-    await router.push({ name: 'community', params: { id: selectedCommunity.value.id } })
+    router.push({ name: 'community', params: { id: selectedCommunity.value.id } })
     selectedCommunity.value = null
   }
 }
+
+onMounted(async () => {
+  try {
+    await loadAMap()
+    initMap()
+  } catch (error) {
+    console.error('高德地图加载失败:', error)
+  }
+})
+
+onBeforeUnmount(() => {
+  if (mapInstance) {
+    mapInstance.destroy()
+  }
+})
 </script>
 
 <style scoped>
@@ -117,71 +148,9 @@ async function goToCommunity() {
   background: #e8f4f8;
 }
 
-.map-bg {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-
-.map-grid {
-  position: absolute;
-  inset: 0;
-  background-image: 
-    linear-gradient(rgba(100,160,200,0.15) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(100,160,200,0.15) 1px, transparent 1px);
-  background-size: 60px 60px;
-}
-
-.road {
-  position: absolute;
-  background: #d4dce6;
-}
-
-.road-h1 { left: 15%; right: 15%; top: 30%; height: 8px; }
-.road-h2 { left: 10%; right: 10%; top: 65%; height: 8px; }
-.road-v1 { top: 10%; bottom: 10%; left: 40%; width: 8px; }
-.road-v2 { top: 5%; bottom: 5%; left: 65%; width: 8px; }
-.road-v3 { top: 15%; bottom: 15%; left: 85%; width: 8px; }
-
-.green-zone {
-  position: absolute;
-  background: #a8e6a3;
-  border-radius: 50%;
-  opacity: 0.5;
-}
-
-.green-1 { width: 120px; height: 120px; left: 12%; top: 15%; }
-.green-2 { width: 150px; height: 100px; right: 15%; bottom: 20%; }
-
-.map-marker {
-  position: absolute;
-  transform: translate(-50%, -100%);
-  cursor: pointer;
-  transition: transform 0.2s;
-  z-index: 10;
-}
-
-.map-marker:hover {
-  transform: translate(-50%, -100%) scale(1.15);
-  z-index: 20;
-}
-
-.marker-pin {
-  font-size: 2em;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-}
-
-.marker-label {
-  text-align: center;
-  font-size: 0.85em;
-  font-weight: bold;
-  color: #2d3748;
-  background: rgba(255,255,255,0.9);
-  padding: 2px 8px;
-  border-radius: 10px;
-  white-space: nowrap;
-  margin-top: 4px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+#amap-container {
+  width: 100%;
+  height: 100%;
 }
 
 .community-popup {
@@ -195,7 +164,7 @@ async function goToCommunity() {
   box-shadow: 0 8px 32px rgba(0,0,0,0.15);
   min-width: 320px;
   max-width: 420px;
-  z-index: 50;
+  z-index: 1000;
   animation: slideUp 0.3s ease;
 }
 
@@ -277,5 +246,18 @@ async function goToCommunity() {
 
 .view-btn:hover {
   opacity: 0.9;
+}
+
+/* 高德地图标记标签样式 */
+.amap-marker-label {
+  background: rgba(255,255,255,0.9);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: bold;
+  color: #2d3748;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  text-align: center;
+  white-space: nowrap;
 }
 </style>
