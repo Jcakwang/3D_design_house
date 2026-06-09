@@ -22,9 +22,8 @@
           @click="goToHouse(fp)"
         >
           <div class="card-visual">
-            <!-- 真实户型 SVG 图 -->
             <img 
-              :src="getFloorPlanImage(fp.id)" 
+              :src="fp.image" 
               :alt="fp.name"
               class="floorplan-img"
             />
@@ -56,6 +55,9 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { communities, floorPlans as allFloorPlans } from '../data/mock'
+import floorPlanA from '../assets/floor-plan-a.svg'
+import floorPlanB from '../assets/floor-plan-b.svg'
+import floorPlanC from '../assets/floor-plan-c.svg'
 
 const route = useRoute()
 const router = useRouter()
@@ -64,20 +66,19 @@ const community = computed(() =>
   communities.find(c => c.id === route.params.id)
 )
 
-const floorPlans = computed(() =>
-  community.value
-    ? allFloorPlans.filter(fp => community.value.floorPlanIds.includes(fp.id))
-    : []
-)
-
-function getFloorPlanImage(fpId) {
-  const map = {
-    'fp1': new URL('../assets/floor-plan-a.svg', import.meta.url).href,
-    'fp2': new URL('../assets/floor-plan-b.svg', import.meta.url).href,
-    'fp3': new URL('../assets/floor-plan-c.svg', import.meta.url).href,
+// 为户型关联 SVG 图片
+const floorPlansWithImages = computed(() => {
+  const imageMap = {
+    'fp1': floorPlanA,
+    'fp2': floorPlanB,
+    'fp3': floorPlanC,
   }
-  return map[fpId] || map['fp1']
-}
+  return community.value
+    ? allFloorPlans
+        .filter(fp => community.value.floorPlanIds.includes(fp.id))
+        .map(fp => ({ ...fp, image: imageMap[fp.id] }))
+    : []
+})
 
 function goToHouse(fp) {
   router.push({

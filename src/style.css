@@ -7,7 +7,7 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+    'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: #f7fafc;
@@ -31,6 +31,7 @@ button {
 /* 滚动条美化 */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -46,10 +47,25 @@ button {
   background: #a0a0a0;
 }
 
+/* 通用加载动画 */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* 响应式 */
 @media (max-width: 768px) {
   .top-nav {
-    padding: 10px 16px;
+    padding: 8px 12px;
+    height: 50px;
   }
   
   .nav-brand {
@@ -57,15 +73,70 @@ button {
   }
   
   .nav-links {
-    gap: 12px;
+    gap: 8px;
   }
   
-  .nav-links a {
+  .nav-item {
+    padding: 4px 6px;
     font-size: 0.85em;
+  }
+  
+  .nav-text {
+    display: none;
+  }
+  
+  .nav-icon {
+    font-size: 1.3em;
+  }
+  
+  .map-header {
+    padding: 16px 12px !important;
+  }
+  
+  .map-header h2 {
+    font-size: 1.3em !important;
+  }
+  
+  .map-header .map-subtitle {
+    font-size: 0.85em !important;
   }
   
   .community-popup {
     min-width: 280px;
-    max-width: calc(100vw - 48px);
+    max-width: calc(100vw - 32px);
+    left: 50%;
+    padding: 16px 18px;
+  }
+  
+  .floorplan-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .detail-header {
+    padding: 16px !important;
+  }
+  
+  .fav-list {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .house-toolbar {
+    padding: 8px 12px !important;
+  }
+  
+  .house-title {
+    font-size: 1em !important;
+  }
+  
+  .decoration-panel {
+    top: 8px;
+    right: 8px;
+    padding: 12px;
+    min-width: 150px;
+  }
+  
+  .style-btn {
+    padding: 6px 8px;
+    font-size: 0.8em;
   }
 }
