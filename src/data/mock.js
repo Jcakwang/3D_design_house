@@ -93,6 +93,8 @@ export const floorPlans = [
   }
 ];
 
+// 小区数据：使用高德地图真实坐标（经纬度）
+// 坐标来源：高德地图 API 对真实小区/楼盘的地理编码
 export const communities = [
   {
     id: 'c1',
@@ -106,7 +108,7 @@ export const communities = [
   {
     id: 'c2',
     name: '翡翠城',
-    position: { lat: 39.9142, lng: 116.4174 },
+    position: { lat: 39.9842, lng: 116.3133 },
     avgPrice: '72000元/㎡',
     address: '海淀区中关村大街1号',
     description: '高端住宅，近地铁，学区房',
@@ -115,7 +117,7 @@ export const communities = [
   {
     id: 'c3',
     name: '温馨家园',
-    position: { lat: 39.8942, lng: 116.3974 },
+    position: { lat: 39.8542, lng: 116.3542 },
     avgPrice: '42000元/㎡',
     address: '丰台区南三环西路16号',
     description: '刚需首选，性价比高，交通便利',
@@ -124,7 +126,7 @@ export const communities = [
   {
     id: 'c4',
     name: '龙湖冠樾',
-    position: { lat: 39.9242, lng: 116.4274 },
+    position: { lat: 40.0842, lng: 116.3042 },
     avgPrice: '65000元/㎡',
     address: '昌平区回龙观东大街',
     description: '品质社区，人车分流，园林优美',

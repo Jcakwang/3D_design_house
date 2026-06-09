@@ -39,20 +39,34 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useFavoritesStore } from '../stores/favorites'
-import { floorPlans, decorationStyles } from '../data/mock'
+import { supabase, floorPlans, decorationStyles } from '../lib/supabase'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 const route = useRoute()
 const router = useRouter()
 const favoritesStore = useFavoritesStore()
+
+const floorPlansRef = ref(floorPlans || [])
+const decorationStylesRef = ref(decorationStyles || [])
+const currentStyle = ref('modern')
 const viewerRef = ref(null)
 
-const currentFloorPlan = computed(() =>
-  floorPlans.find(fp => fp.id === route.params.id)
-)
-const currentStyle = ref('modern')
-const styles = ref(decorationStyles)
+const currentFloorPlan = computed(() => {
+  // 优先从 Supabase 数据中查找
+  if (supabase && floorPlansRef.value.length > 0) {
+    return floorPlansRef.value.find(fp => fp.id === route.params.id)
+  }
+  // fallback 到 mock 数据
+  return floorPlans.find(fp => fp.id === route.params.id)
+})
+
+const styles = computed(() => {
+  if (supabase && decorationStylesRef.value.length > 0) {
+    return decorationStylesRef.value
+  }
+  return decorationStyles
+})
 
 const isFav = computed(() =>
   currentFloorPlan.value ? favoritesStore.isFavorite(currentFloorPlan.value.id) : false
@@ -143,8 +157,8 @@ function buildRoom() {
   if (!fp) return
 
   const { width, depth, height: roomH, rooms } = fp.layout
-  const colors = decorationStyles.find(s => s.id === currentStyle.value)?.colors
-    || decorationStyles[1].colors
+  const colors = styles.value.find(s => s.id === currentStyle.value)?.colors
+    || styles.value[1]?.colors || { floor: 0x666666, wall: 0xeeeeee, ceiling: 0xffffff, accent: 0x333333 }
 
   // 地板
   const floorGeo = new THREE.PlaneGeometry(width, depth)
@@ -157,151 +171,71 @@ function buildRoom() {
 
   // 天花板
   const ceilGeo = new THREE.PlaneGeometry(width, depth)
-  const ceilMat = new THREE.MeshStandardMaterial({ color: colors.ceiling, roughness: 0.9 })
-  const ceiling = new THREE.Mesh(ceilGeo, ceilMat)
-  ceiling.rotation.x = Math.PI / 2
-  ceiling.position.set(width / 2, roomH, depth / 2)
-  roomGroup.add(ceiling)
+  const ceilMat = new THREE.MeshStandardMaterial({ color: colors.ceiling, roughness: 0.9, side: THREE.DoubleSide })
+  const ceil = new THREE.Mesh(ceilGeo, ceilMat)
+  ceil.rotation.x = Math.PI / 2
+  ceil.position.set(width / 2, roomH, depth / 2)
+  roomGroup.add(ceil)
 
-  const wallMat = new THREE.MeshStandardMaterial({ color: colors.wall, roughness: 0.7, side: THREE.DoubleSide })
+  // 房间分隔
+  rooms.forEach((room, i) => {
+    const wallThickness = 0.1
+    const wallHeight = roomH
+    const halfT = wallThickness / 2
 
-  // 后墙
-  createRoomMesh(new THREE.PlaneGeometry(width, roomH), colors.wall, [width / 2, roomH / 2, 0], null, roomGroup)
-  // 左墙
-  createRoomMesh(new THREE.PlaneGeometry(depth, roomH), colors.wall, [0, roomH / 2, depth / 2], Math.PI / 2, roomGroup)
-  // 右墙
-  createRoomMesh(new THREE.PlaneGeometry(depth, roomH), colors.wall, [width, roomH / 2, depth / 2], -Math.PI / 2, roomGroup)
+    // 右墙
+    if (i === 0 || rooms[i - 1]?.x + rooms[i - 1]?.w < room.x + room.w) {
+      const wallGeo = new THREE.BoxGeometry(wallThickness, wallHeight, room.d)
+      const wallMat = new THREE.MeshStandardMaterial({ color: colors.wall, roughness: 0.8 })
+      const wall = new THREE.Mesh(wallGeo, wallMat)
+      wall.position.set(room.x + room.w + halfT, wallHeight / 2, room.z + room.d / 2)
+      wall.receiveShadow = true
+      roomGroup.add(wall)
+    }
 
-  // 前墙 - 半墙
-  const frontWall = new THREE.Mesh(
-    new THREE.PlaneGeometry(width, roomH * 0.35),
-    new THREE.MeshStandardMaterial({ color: colors.wall, roughness: 0.7, side: THREE.DoubleSide, transparent: true, opacity: 0.3 })
-  )
+    // 上墙
+    if (i === 0 || rooms[i - 1]?.z + rooms[i - 1]?.d < room.z + room.d) {
+      const wallGeo = new THREE.BoxGeometry(room.w, wallHeight, wallThickness)
+      const wallMat = new THREE.MeshStandardMaterial({ color: colors.wall, roughness: 0.8 })
+      const wall = new THREE.Mesh(wallGeo, wallMat)
+      wall.position.set(room.x + room.w / 2, wallHeight / 2, room.z + room.d + halfT)
+      wall.receiveShadow = true
+      roomGroup.add(wall)
+    }
+
+    // 房间标签
+    addLabel(scene, room.name, [room.x + room.w / 2, roomH + 0.3, room.z + room.d / 2], roomGroup)
+  })
+
+  // 前墙（有门洞）
+  const frontWallGeo = new THREE.PlaneGeometry(width, roomH)
+  const frontWallMat = new THREE.MeshStandardMaterial({
+    color: colors.wall,
+    roughness: 0.8,
+    side: THREE.DoubleSide
+  })
+  const frontWall = new THREE.Mesh(frontWallGeo, frontWallMat)
+  frontWall.position.set(width / 2, roomH / 2, 0)
   frontWall.rotation.y = Math.PI
-  frontWall.position.set(width / 2, roomH * 0.82, depth)
+  frontWall.receiveShadow = true
   roomGroup.add(frontWall)
 
-  // 内部分隔墙（半透明）
-  const innerMat = new THREE.MeshStandardMaterial({
-    color: colors.accent, roughness: 0.6, side: THREE.DoubleSide,
-    transparent: true, opacity: 0.35
-  })
-  rooms.forEach((room, i) => {
-    if (i === 0) return
-    // 右侧隔墙
-    const w1 = new THREE.Mesh(new THREE.PlaneGeometry(room.d, roomH * 0.85), innerMat)
-    w1.position.set(room.x + room.w, (roomH * 0.85) / 2, room.z + room.d / 2)
-    w1.rotation.y = Math.PI / 2
-    roomGroup.add(w1)
-    // 下侧隔墙
-    const w2 = new THREE.Mesh(new THREE.PlaneGeometry(room.w, roomH * 0.85), innerMat)
-    w2.position.set(room.x + room.w / 2, (roomH * 0.85) / 2, room.z + room.d)
-    roomGroup.add(w2)
-  })
-
-  // 房间标签
-  rooms.forEach(room => {
-    addLabel(scene, room.name,
-      [room.x + room.w / 2, roomH * 0.7, room.z + room.d / 2],
-      roomGroup)
-  })
-
-  // 简单家具
-  const sofaMat = new THREE.MeshStandardMaterial({ color: 0x8899aa, roughness: 0.8 })
-  // 沙发
-  const sofa = new THREE.Mesh(new THREE.BoxGeometry(2, 0.45, 0.7), sofaMat)
-  sofa.position.set(2, 0.225, 2.5)
-  sofa.castShadow = true
-  roomGroup.add(sofa)
-  const sofaBack = new THREE.Mesh(new THREE.BoxGeometry(2, 0.55, 0.12), sofaMat)
-  sofaBack.position.set(2, 0.5, 2.1)
-  roomGroup.add(sofaBack)
-
-  // 茶几
-  const tableMat = new THREE.MeshStandardMaterial({ color: 0x8b7355, roughness: 0.6 })
-  const table = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.05, 0.7), tableMat)
-  table.position.set(3.5, 0.45, 2.5)
-  table.castShadow = true
-  roomGroup.add(table)
-  const legMat = new THREE.MeshStandardMaterial({ color: 0x666666 })
-  const legGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.45)
-  [[-0.5, -0.28], [-0.5, 0.28], [0.5, -0.28], [0.5, 0.28]].forEach(([dx, dz]) => {
-    const leg = new THREE.Mesh(legGeo, legMat)
-    leg.position.set(3.5 + dx, 0.225, 2.5 + dz)
-    roomGroup.add(leg)
-  })
-
-  // 床（主卧示意）
-  const bedMat = new THREE.MeshStandardMaterial({ color: 0xd4c5b2, roughness: 0.9 })
-  const bedBase = new THREE.Mesh(new THREE.BoxGeometry(2, 0.35, 1.8), bedMat)
-  bedBase.position.set(fp.layout.width - 3, 0.175, fp.layout.depth * 0.25)
-  bedBase.castShadow = true
-  roomGroup.add(bedBase)
-  const pillowMat = new THREE.MeshStandardMaterial({ color: 0xffffff })
-  const pillow = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.12, 0.5), pillowMat)
-  pillow.position.set(fp.layout.width - 3, 0.4, fp.layout.depth * 0.25 - 0.55)
-  roomGroup.add(pillow)
-
   scene.add(roomGroup)
-
-  // 相机飞入动画
-  const startPos = camera.position.clone()
-  const endPos = new THREE.Vector3(width * 0.55, roomH * 1.3, depth * 0.75)
-  const startTime = performance.now()
-  const duration = 800
-  const animateCamera = () => {
-    const elapsed = performance.now() - startTime
-    const progress = Math.min(elapsed / duration, 1)
-    const ease = 1 - Math.pow(1 - progress, 3)
-    camera.position.lerpVectors(startPos, endPos, ease)
-    camera.lookAt(width / 2, roomH * 0.3, depth / 2)
-    if (progress < 1) requestAnimationFrame(animateCamera)
-  }
-  animateCamera()
 }
 
 function changeStyle(style) {
   currentStyle.value = style.id
-  if (!roomGroup) return
-  const colors = style.colors
-  const fp = currentFloorPlan.value
-  if (!fp) return
-  const { height: roomH, depth, width } = fp.layout
-
-  roomGroup.traverse(child => {
-    if (child.isMesh && child.material && !child.material.transparent) {
-      const y = child.position.y
-      const z = child.position.z
-      const x = child.position.x
-      const halfW = width / 2
-      const halfD = depth / 2
-
-      let targetColor
-      if (Math.abs(y) < 0.05) {
-        targetColor = colors.floor       // 地板
-      } else if (Math.abs(y - roomH) < 0.05) {
-        targetColor = colors.ceiling     // 天花板
-      } else if (Math.abs(z) < 0.05 || Math.abs(z - depth) < 0.05) {
-        targetColor = colors.wall        // 前后墙
-      } else if (Math.abs(x) < 0.05 || Math.abs(x - width) < 0.05) {
-        targetColor = colors.wall        // 左右墙
-      } else {
-        targetColor = colors.wall        // 家具默认墙色
-      }
-
-      const oldColor = child.material.color.clone()
-      const newColor = new THREE.Color(targetColor)
-      animateColor(child.material.color, oldColor, newColor, 600)
-    }
-  })
+  buildRoom()
 }
 
 function getStylePreview(style) {
   const c = style.colors
-  const f = '#' + c.floor.toString(16).padStart(6, '0')
-  const w = '#' + c.wall.toString(16).padStart(6, '0')
-  const a = '#' + c.accent.toString(16).padStart(6, '0')
-  return { background: `linear-gradient(135deg, ${w} 0%, ${f} 50%, ${a} 100%)` }
+  return {
+    background: `linear-gradient(135deg, 
+      #${c.floor.toString(16).padStart(6, '0')} 0%, 
+      #${c.wall.toString(16).padStart(6, '0')} 50%, 
+      #${c.ceiling.toString(16).padStart(6, '0')} 100%)`
+  }
 }
 
 function toggleFavorite() {
@@ -385,7 +319,18 @@ function initThreeJS() {
   window.addEventListener('resize', resizeCanvas)
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // 从 Supabase 加载户型和装修风格数据
+  if (supabase) {
+    const { data: fpData } = await supabase.from('floor_plans').select('*')
+    if (fpData) {
+      floorPlansRef.value = fpData
+    }
+    const { data: styleData } = await supabase.from('decoration_styles').select('*')
+    if (styleData) {
+      decorationStylesRef.value = styleData
+    }
+  }
   initThreeJS()
 })
 

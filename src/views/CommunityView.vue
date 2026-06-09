@@ -1,7 +1,7 @@
 <template>
   <div class="community-view">
     <button class="back-btn" @click="$router.push('/')">← 返回地图</button>
-    
+
     <div v-if="community" class="community-detail">
       <div class="detail-header">
         <h2>{{ community.name }}</h2>
@@ -11,9 +11,9 @@
         </div>
         <p class="detail-desc">{{ community.description }}</p>
       </div>
-      
+
       <h3 class="section-title">🏠 可用户型</h3>
-      
+
       <div class="floorplan-grid">
         <div
           v-for="fp in floorPlans"
@@ -22,11 +22,9 @@
           @click="goToHouse(fp)"
         >
           <div class="card-visual">
-            <img 
-              :src="fp.image" 
-              :alt="fp.name"
-              class="floorplan-img"
-            />
+            <LazyImage :src="fp.image" :alt="fp.name" class="floorplan-img">
+              <div class="img-placeholder">🏠</div>
+            </LazyImage>
           </div>
           <div class="card-info">
             <h4>{{ fp.name }}</h4>
@@ -43,7 +41,7 @@
         </div>
       </div>
     </div>
-    
+
     <div v-else class="not-found">
       <p>😕 未找到该小区信息</p>
       <button class="back-btn" @click="$router.push('/')">返回地图</button>
@@ -52,32 +50,48 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { communities, floorPlans as allFloorPlans } from '../data/mock'
+import { supabase, communities, floorPlans as allFloorPlans } from '../lib/supabase'
 import floorPlanA from '../assets/floor-plan-a.svg'
 import floorPlanB from '../assets/floor-plan-b.svg'
 import floorPlanC from '../assets/floor-plan-c.svg'
+import LazyImage from '../components/LazyImage.vue'
 
 const route = useRoute()
 const router = useRouter()
 
-const community = computed(() =>
-  communities.find(c => c.id === route.params.id)
-)
+const communityRef = ref(null)
+const communitiesRef = ref(communities || [])
+const floorPlansRef = ref(allFloorPlans || [])
 
-// 为户型关联 SVG 图片
-const floorPlansWithImages = computed(() => {
-  const imageMap = {
-    'fp1': floorPlanA,
-    'fp2': floorPlanB,
-    'fp3': floorPlanC,
+function normalizeCommunity(c) {
+  return {
+    ...c,
+    avgPrice: c.avg_price || c.avgPrice,
+    floorPlanIds: c.floor_plan_ids || c.floorPlanIds || []
   }
-  return community.value
-    ? allFloorPlans
-        .filter(fp => community.value.floorPlanIds.includes(fp.id))
-        .map(fp => ({ ...fp, image: imageMap[fp.id] }))
-    : []
+}
+
+const community = computed(() => {
+  if (supabase) {
+    return communitiesRef.value.find(c => c.id === route.params.id)
+  }
+  return communities.find(c => c.id === route.params.id)
+})
+
+const imageMap = {
+  'fp1': floorPlanA,
+  'fp2': floorPlanB,
+  'fp3': floorPlanC,
+}
+
+const floorPlans = computed(() => {
+  if (!community.value) return []
+  const source = supabase ? floorPlansRef.value : allFloorPlans
+  return source
+    .filter(fp => community.value.floorPlanIds.includes(fp.id))
+    .map(fp => ({ ...fp, image: imageMap[fp.id] }))
 })
 
 function goToHouse(fp) {
@@ -87,6 +101,17 @@ function goToHouse(fp) {
     query: { community: community.value?.name || '' }
   })
 }
+
+async function loadData() {
+  if (supabase) {
+    const { data } = await supabase.from('communities').select('*')
+    if (data) communitiesRef.value = data.map(normalizeCommunity)
+    const { data: fpData } = await supabase.from('floor_plans').select('*')
+    if (fpData) floorPlansRef.value = fpData
+  }
+}
+
+onMounted(loadData)
 </script>
 
 <style scoped>
@@ -106,6 +131,7 @@ function goToHouse(fp) {
   font-size: 0.95em;
   margin-bottom: 20px;
   transition: all 0.2s;
+  font-family: inherit;
 }
 
 .back-btn:hover {
@@ -158,7 +184,7 @@ function goToHouse(fp) {
   background: white;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
   border: 1px solid #e2e8f0;
@@ -166,7 +192,7 @@ function goToHouse(fp) {
 
 .floorplan-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .card-visual {
@@ -180,6 +206,15 @@ function goToHouse(fp) {
   width: 100%;
   max-width: 280px;
   height: auto;
+}
+
+.img-placeholder {
+  font-size: 3em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
 .card-info {
@@ -236,6 +271,7 @@ function goToHouse(fp) {
   font-weight: bold;
   cursor: pointer;
   transition: opacity 0.2s;
+  font-family: inherit;
 }
 
 .enter-btn:hover {
