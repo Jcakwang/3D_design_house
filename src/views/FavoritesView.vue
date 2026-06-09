@@ -9,15 +9,7 @@
         class="fav-card"
       >
         <div class="card-visual">
-          <svg viewBox="0 0 200 150" width="100%" height="100">
-            <rect x="10" y="10" width="180" height="130" fill="none" stroke="#cbd5e0" stroke-width="2" rx="4"/>
-            <line x1="100" y1="10" x2="100" y2="140" stroke="#cbd5e0" stroke-width="1.5"/>
-            <line x1="10" y1="80" x2="100" y2="80" stroke="#cbd5e0" stroke-width="1.5"/>
-            <text x="55" y="55" text-anchor="middle" fill="#718096" font-size="11">客厅</text>
-            <text x="55" y="115" text-anchor="middle" fill="#718096" font-size="11">卧室</text>
-            <text x="145" y="40" text-anchor="middle" fill="#718096" font-size="11">主卧</text>
-            <text x="145" y="110" text-anchor="middle" fill="#718096" font-size="11">厨房</text>
-          </svg>
+          <img :src="getFloorPlanImage(fav.id)" :alt="fav.name" class="floorplan-img" />
         </div>
         <div class="card-info">
           <h4>{{ fav.name }}</h4>
@@ -52,11 +44,20 @@
 <script setup>
 import { useFavoritesStore } from '../stores/favorites'
 import { useRouter } from 'vue-router'
+import floorPlanA from '../assets/floor-plan-a.svg'
+import floorPlanB from '../assets/floor-plan-b.svg'
+import floorPlanC from '../assets/floor-plan-c.svg'
 
 const favoritesStore = useFavoritesStore()
 const router = useRouter()
 
 const favorites = favoritesStore.favorites
+
+const imageMap = { 'fp1': floorPlanA, 'fp2': floorPlanB, 'fp3': floorPlanC }
+
+function getFloorPlanImage(id) {
+  return imageMap[id] || floorPlanA
+}
 
 function removeFav(id) {
   favoritesStore.removeFavorite(id)
@@ -95,7 +96,15 @@ function goToHouse(id) {
 
 .card-visual {
   background: #f7fafc;
-  padding: 12px;
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.floorplan-img {
+  width: 100%;
+  max-width: 280px;
+  height: auto;
 }
 
 .card-info {

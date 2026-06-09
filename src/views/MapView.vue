@@ -6,7 +6,16 @@
     </div>
 
     <div class="map-container" ref="mapRef">
-      <div id="amap-container"></div>
+      <div id="amap-container" :class="{ 'map-loading': !mapLoaded }">
+        <div v-if="!mapLoaded" class="loading-overlay">
+          <div class="spinner"></div>
+          <p>地图加载中...</p>
+        </div>
+        <div v-if="mapError" class="map-error">
+          <p>😔 地图加载失败</p>
+          <button @click="retryLoad">重新加载</button>
+        </div>
+      </div>
     </div>
 
     <!-- 小区信息卡片 -->
@@ -38,40 +47,34 @@ import { communities } from '../data/mock'
 const router = useRouter()
 const mapRef = ref(null)
 const selectedCommunity = ref(null)
+const mapLoaded = ref(false)
+const mapError = ref(false)
+
 let mapInstance = null
 let markers = []
-let infoWindow = null
-
-const AMAP_KEY = '084c94186c480e019a34687c67db84ff'
-const AMAP_SECURITY_CODE = '084c94186c480e019a34687c67db84ff'
-
-function loadAMap() {
-  return new Promise((resolve, reject) => {
-    if (window.AMap) {
-      resolve()
-      return
-    }
-    // 设置安全密钥
-    window._AMapSecurityConfig = {
-      securityJsCode: AMAP_SECURITY_CODE
-    }
-    const script = document.createElement('script')
-    script.type = 'text/javascript'
-    script.src = `https://web.amap.com/maps?v=2.0&key=${AMAP_KEY}&plugin=AMap.Marker,AMap.InfoWindow`
-    script.onload = resolve
-    script.onerror = reject
-    document.head.appendChild(script)
-  })
-}
 
 function initMap() {
-  mapInstance = new AMap.Map('amap-container', {
-    zoom: 12,
-    center: [116.4074, 39.9042],
-    mapStyle: 'amap://styles/light'
-  })
+  if (mapInstance) return
 
-  // 为每个小区创建标记
+  try {
+    mapInstance = new AMap.Map('amap-container', {
+      zoom: 12,
+      center: [116.4074, 39.9042],
+      mapStyle: 'amap://styles/light'
+    })
+
+    mapInstance.on('complete', () => {
+      addMarkers()
+    })
+  } catch (error) {
+    console.error('地图初始化失败:', error)
+    mapError.value = true
+  }
+}
+
+function addMarkers() {
+  if (!window.AMap) return
+
   communities.forEach(comm => {
     const marker = new AMap.Marker({
       position: [comm.position.lng, comm.position.lat],
@@ -102,13 +105,27 @@ function goToCommunity() {
   }
 }
 
-onMounted(async () => {
-  try {
-    await loadAMap()
-    initMap()
-  } catch (error) {
-    console.error('高德地图加载失败:', error)
+function retryLoad() {
+  if (mapInstance) {
+    mapInstance.destroy()
+    mapInstance = null
   }
+  mapError.value = false
+  initMap()
+}
+
+onMounted(() => {
+  // 高德地图脚本在 HTML 中已加载
+  // 等待一小段时间确保 AMap 全局可用
+  const checkAndInit = () => {
+    if (window.AMap) {
+      initMap()
+      mapLoaded.value = true
+    } else {
+      setTimeout(checkAndInit, 500)
+    }
+  }
+  checkAndInit()
 })
 
 onBeforeUnmount(() => {
@@ -151,6 +168,58 @@ onBeforeUnmount(() => {
 #amap-container {
   width: 100%;
   height: 100%;
+}
+
+.map-loading #amap-container {
+  filter: blur(4px);
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #718096;
+  z-index: 5;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  margin: 0 auto 12px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.map-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #e53e3e;
+  z-index: 5;
+}
+
+.map-error p {
+  margin-bottom: 12px;
+  font-size: 1.1em;
+}
+
+.map-error button {
+  padding: 8px 20px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
 .community-popup {
@@ -248,15 +317,14 @@ onBeforeUnmount(() => {
   opacity: 0.9;
 }
 
-/* 高德地图标记标签样式 */
 .amap-marker-label {
-  background: rgba(255,255,255,0.9);
-  padding: 2px 8px;
-  border-radius: 10px;
+  background: rgba(255,255,255,0.95);
+  padding: 4px 10px;
+  border-radius: 12px;
   font-size: 13px;
   font-weight: bold;
   color: #2d3748;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   text-align: center;
   white-space: nowrap;
 }

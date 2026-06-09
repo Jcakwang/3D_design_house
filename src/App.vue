@@ -5,9 +5,13 @@
         🏠 3D看房工具
       </router-link>
       <div class="nav-links">
-        <router-link to="/">📍 地图找房</router-link>
-        <router-link to="/favorites" class="fav-link">
-          ❤️ 收藏夹
+        <router-link to="/" class="nav-item">
+          <span class="nav-icon">📍</span>
+          <span class="nav-text">地图找房</span>
+        </router-link>
+        <router-link to="/favorites" class="nav-item fav-link">
+          <span class="nav-icon">❤️</span>
+          <span class="nav-text">收藏夹</span>
           <span v-if="favCount > 0" class="fav-badge">{{ favCount }}</span>
         </router-link>
       </div>
@@ -31,17 +35,18 @@ const favCount = computed(() => favoritesStore.favorites.length)
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 24px;
+  padding: 10px 20px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   position: sticky;
   top: 0;
   z-index: 100;
+  height: 56px;
 }
 
 .nav-brand {
-  font-size: 1.4em;
+  font-size: 1.3em;
   font-weight: bold;
   color: white;
   text-decoration: none;
@@ -49,38 +54,51 @@ const favCount = computed(() => favoritesStore.favorites.length)
 
 .nav-links {
   display: flex;
-  gap: 20px;
+  gap: 16px;
+  align-items: center;
 }
 
-.nav-links a {
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   color: rgba(255,255,255,0.85);
   text-decoration: none;
-  font-size: 1em;
+  font-size: 0.95em;
   transition: color 0.2s;
-}
-
-.nav-links a:hover,
-.nav-links a.router-link-active {
-  color: white;
-}
-
-.fav-link {
   position: relative;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.nav-item:hover,
+.nav-item.router-link-active {
+  color: white;
+  background: rgba(255,255,255,0.15);
+}
+
+.nav-icon {
+  font-size: 1.1em;
+}
+
+.nav-text {
+  display: inline;
 }
 
 .fav-badge {
   position: absolute;
-  top: -8px;
-  right: -16px;
+  top: -2px;
+  right: -8px;
   background: #ff4757;
   color: white;
   border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  font-size: 0.7em;
+  width: 18px;
+  height: 18px;
+  font-size: 0.65em;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-weight: bold;
 }
 
 .main-content {
