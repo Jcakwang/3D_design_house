@@ -1,7 +1,7 @@
 <template>
   <div class="favorites-view">
     <h2>❤️ 我的收藏</h2>
-    
+
     <div v-if="favorites.length > 0" class="fav-list">
       <div
         v-for="fav in favorites"
@@ -9,7 +9,9 @@
         class="fav-card"
       >
         <div class="card-visual">
-          <img :src="getFloorPlanImage(fav.id)" :alt="fav.name" class="floorplan-img" />
+          <LazyImage :src="getFloorPlanImage(fav.id)" :alt="fav.name" class="floorplan-img">
+            <div class="img-placeholder">🏠</div>
+          </LazyImage>
         </div>
         <div class="card-info">
           <h4>{{ fav.name }}</h4>
@@ -29,7 +31,7 @@
         </div>
       </div>
     </div>
-    
+
     <div v-else class="empty-state">
       <div class="empty-icon">💝</div>
       <p>还没有收藏任何户型</p>
@@ -42,17 +44,19 @@
 </template>
 
 <script setup>
+import { useAuthStore } from '../stores/auth'
 import { useFavoritesStore } from '../stores/favorites'
 import { useRouter } from 'vue-router'
 import floorPlanA from '../assets/floor-plan-a.svg'
 import floorPlanB from '../assets/floor-plan-b.svg'
 import floorPlanC from '../assets/floor-plan-c.svg'
+import LazyImage from '../components/LazyImage.vue'
 
+const auth = useAuthStore()
 const favoritesStore = useFavoritesStore()
 const router = useRouter()
 
 const favorites = favoritesStore.favorites
-
 const imageMap = { 'fp1': floorPlanA, 'fp2': floorPlanB, 'fp3': floorPlanC }
 
 function getFloorPlanImage(id) {
@@ -90,7 +94,7 @@ function goToHouse(id) {
   background: white;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   border: 1px solid #e2e8f0;
 }
 
@@ -105,6 +109,15 @@ function goToHouse(id) {
   width: 100%;
   max-width: 280px;
   height: auto;
+}
+
+.img-placeholder {
+  font-size: 3em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
 .card-info {
@@ -150,6 +163,7 @@ function goToHouse(id) {
   border-radius: 8px;
   font-weight: bold;
   cursor: pointer;
+  font-family: inherit;
 }
 
 .remove-btn {
@@ -159,6 +173,7 @@ function goToHouse(id) {
   border-radius: 8px;
   cursor: pointer;
   color: #e53e3e;
+  font-family: inherit;
 }
 
 .remove-btn:hover {
@@ -190,5 +205,6 @@ function goToHouse(id) {
   font-size: 1em;
   font-weight: bold;
   cursor: pointer;
+  font-family: inherit;
 }
 </style>

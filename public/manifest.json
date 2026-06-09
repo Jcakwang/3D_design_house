@@ -1,0 +1,18 @@
+{
+  "name": "3D看房工具",
+  "short_name": "3D看房",
+  "description": "在线3D/VR看房体验工具",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7fafc",
+  "theme_color": "#667eea",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

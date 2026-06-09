@@ -3,53 +3,53 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.json" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="3D看房工具 - 在线3D/VR看房，选择装修风格，轻松对比户型" />
     <meta name="keywords" content="3D看房,VR看房,户型图,装修,房产" />
+    <meta name="theme-color" content="#667eea" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="3D看房" />
+    
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website" />
     <meta property="og:title" content="3D看房工具" />
-    <meta property="og:description" content="在线3D/VR看房体验" />
+    <meta property="og:description" content="在线3D/VR看房体验工具" />
+    <meta property="og:image" content="/og-image.png" />
+    
     <title>3D看房工具</title>
+    
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f7fafc; color: #2d3748; }
       #app { min-height: 100vh; }
-      /* 全局加载动画 */
       .global-loading {
-        position: fixed;
-        inset: 0;
-        background: #f7fafc;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-        transition: opacity 0.5s;
+        position: fixed; inset: 0; background: #f7fafc;
+        display: flex; align-items: center; justify-content: center;
+        z-index: 9999; transition: opacity 0.5s;
       }
-      .global-loading.hidden {
-        opacity: 0;
-        pointer-events: none;
-      }
+      .global-loading.hidden { opacity: 0; pointer-events: none; }
       .global-loading .spinner {
-        width: 48px;
-        height: 48px;
-        border: 4px solid #e2e8f0;
-        border-top-color: #667eea;
-        border-radius: 50%;
+        width: 48px; height: 48px; border: 4px solid #e2e8f0;
+        border-top-color: #667eea; border-radius: 50%;
         animation: spin 0.8s linear infinite;
       }
-      @keyframes spin {
-        to { transform: rotate(360deg); }
-      }
+      @keyframes spin { to { transform: rotate(360deg); } }
     </style>
-    <!-- 高德地图 JS API - 先加载，保证全局可用 -->
-    <script>
-      window._AMapSecurityConfig = {
-        securityJsCode: '084c94186c480e019a34687c67db84ff'
-      }
-    </script>
-    <script src="https://web.amap.com/maps?v=2.0&key=084c94186c480e019a34687c67db84ff&plugin=AMap.Marker,AMap.InfoWindow"></script>
   </head>
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
+    <script>
+      // 注册 Service Worker
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('SW registered:', reg.scope))
+            .catch(err => console.error('SW registration failed:', err))
+        })
+      }
+    </script>
   </body>
 </html>
